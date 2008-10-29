@@ -4,7 +4,12 @@ from django.db import models
 class Repository(models.Model):
     "A repository"
 
-    # Almost always a filesystem path
+    name = models.CharField(
+        max_length=255,
+        help_text="A short name for the repository used in templates "
+        "and listings.")
+    description = models.TextField(
+        help_text="A short description shown on the repository details page")
     connection_string = models.CharField(
         max_length=255,
         help_text="For Mercurial, Git, and Bazaar, the full filesystem path "
@@ -12,6 +17,9 @@ class Repository(models.Model):
     slug = models.SlugField(
         max_length=255, primary_key=True,
         help_text="An identifier to use in the URL for this repository")
+    show_on_index = models.BooleanField(
+        default=True,
+        help_text="Whether this repository shows up on the repository index")
 
     MERCURIAL = 'mercurial'
     CVS = 'cvs'
@@ -30,6 +38,7 @@ class Repository(models.Model):
 
     class Meta:
         db_table = "repobrowser_repository"
+        ordering = 
 
     def __unicode__(self):
         return "%s(%s)" % (self.get_versioning_backend_display(),
@@ -48,7 +57,7 @@ class Commit(models.Model):
 
     """
 
-    repository = models.ForeignKey(Repository)
+    repository = models.ForeignKey(Repository, related_name="commits")
     # Hash for DVCS, rev number for svn/cvs
     identifier = models.CharField(max_length=255, db_index=True)
 
@@ -61,8 +70,8 @@ class Commit(models.Model):
 class CommitRelation(models.Model):
     "A relation between a parent and child commit"
     # Because of graph-based DVCSs, I can't simply use a .parent FK.
-    parent = models.ForeignKey(Commit)
-    child = models.ForeignKey(Commit)
+    parent = models.ForeignKey(Commit, related_name="child_relations")
+    child = models.ForeignKey(Commit, related_name="parent_relations")
 
     class Meta:
         unique_together = (
