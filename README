@@ -1,0 +1,5 @@
+This projects aims to provide a portable Django app for browsing code
+repositories.
+
+DVCSs are the first target backends - Mercurial, Git, and Bazaar - but
+I'd like to have Subversion and CVS at some point as well.
