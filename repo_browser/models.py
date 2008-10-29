@@ -49,11 +49,8 @@ class Repository(models.Model):
         return "<%s>" % unicode(self)
 
     def get_backend(self):
-        backend_module = getattr(
-            __import__("repo_browser.backends.%s" % self.vcs_backend
-                       ).backends,
-                self.vcs_backend)
-        BackendClass = getattr(backend_module,
+        import repo_browser.backends
+        BackendClass = getattr(repo_browser.backends,
                                 "%sBackend" % self.vcs_backend.capitalize())
         return BackendClass(self.connection_string)
 
