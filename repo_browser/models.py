@@ -90,7 +90,7 @@ class CommitRelation(models.Model):
 
     class Meta:
         unique_together = (
-            ("identifier", "id"))
+            ("parent", "child"))
         db_table = "repobrowser_commit_relation"
 
     def __unicode__(self):
