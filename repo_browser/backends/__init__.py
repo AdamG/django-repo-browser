@@ -27,6 +27,8 @@ class MercurialBackend(BaseBackend):
         import mercurial
         import mercurial.ui
         import mercurial.hg
+        import mercurial.node
+        self.hexify = mercurial.node.hex
 
         super(MercurialBackend, self).__init__(*args, **kwargs)
         self.repository = mercurial.hg.repository(
@@ -35,14 +37,16 @@ class MercurialBackend(BaseBackend):
 
     def parents_for(self, identifier):
         return [
-            c._node for c in self.repository.changectx(identifier).parents()]
+            self.hexify(c._node) for c in
+            self.repository.changectx(identifier).parents()]
 
     def children_for(self, identifier):
         return [
-            c._node for c in self.repository.changectx(identifier).children()]
+            self.hexify(c._node) for c in
+            self.repository.changectx(identifier).children()]
 
     def tip(self):
-        return self.repository.changectx("tip")._node
+        return self.hexify(self.repository.changectx("tip")._node)
 
     def root(self):
-        return self.repository.changectx("0")._node
+        return self.hexify(self.repository.changectx("0")._node)
