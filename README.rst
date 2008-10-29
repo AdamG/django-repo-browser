@@ -20,3 +20,5 @@ Installation
 #. Symlink `media/repo_browser.css` and `media/repo_browser.js` to
    your `MEDIA_ROOT`
 
+#. Add `url(r'^repos/', include('repo_browser.urls')),` to your
+   `urls.py`
