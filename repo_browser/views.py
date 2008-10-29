@@ -10,7 +10,8 @@ def list_repositories(request):
 
     repositories = repo_browser.models.Repository.objects.filter(
         show_on_index=True)
-    return direct_to_template(request, "repo_browser/list_repositories.html")
+    return direct_to_template(request, "repo_browser/list_repositories.html",
+                              {"repositories": repositories})
 
 
 def repository_details(request, repository_slug):

@@ -39,9 +39,10 @@ class Repository(models.Model):
     class Meta:
         db_table = "repobrowser_repository"
         ordering = ("name",)
+        verbose_name_plural = "repositories"
 
     def __unicode__(self):
-        return "%s(%s)" % (self.get_vcs_backend_display(),
+        return "%s(%r)" % (self.get_vcs_backend_display(),
                            self.connection_string)
 
     def __repr__(self):
@@ -61,6 +62,17 @@ class Repository(models.Model):
         if not hasattr(self, "_backend"):
             self._backend = self.get_backend()
         return self._backend
+
+    def full_sync(self):
+        """Starting with root and traversing, completely sync the repository
+
+        Should be safe to run multiple times
+
+        """
+        pending_commits = [self.backend.root()]
+        for commit in pending_commits:
+            pending_commits.extend(self.backend.children_for(commit))
+            self.commits.get_or_create(identifier=commit)
 
 
 class Commit(models.Model):
