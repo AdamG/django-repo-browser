@@ -26,26 +26,41 @@ class Repository(models.Model):
     SUBVERSION = 'subversion'
     REMOTE_SUBVERSION = 'subversion-remote'
     GIT = 'git'
-    VERSIONING_BACKEND_CHOICES = (
+    VCS_BACKEND_CHOICES = (
         (MERCURIAL, "Mercurial"),
         (CVS, 'CVS'),
         (SUBVERSION, 'Subversion'),
         (REMOTE_SUBVERSION, 'Subversion - Remote'),
         (GIT, 'Git'),
         )
-    versioning_backend = models.CharField(
-        max_length=128, choices=VERSIONING_BACKEND_CHOICES)
+    vcs_backend = models.CharField(
+        max_length=128, choices=VCS_BACKEND_CHOICES)
 
     class Meta:
         db_table = "repobrowser_repository"
-        ordering = 
+        ordering = ("name",)
 
     def __unicode__(self):
-        return "%s(%s)" % (self.get_versioning_backend_display(),
+        return "%s(%s)" % (self.get_vcs_backend_display(),
                            self.connection_string)
 
     def __repr__(self):
         return "<%s>" % unicode(self)
+
+    def get_backend(self):
+        backend_module = getattr(
+            __import__("repo_browser.backends.%s" % self.vcs_backend
+                       ).backends,
+                self.vcs_backend)
+        BackendClass = getattr(backend_module,
+                                "%sBackend" % self.vcs_backend.capitalize())
+        return BackendClass(self.connection_string)
+
+    @property
+    def backend(self):
+        if not hasattr(self, "_backend"):
+            self._backend = self.get_backend()
+        return self._backend
 
 
 class Commit(models.Model):
