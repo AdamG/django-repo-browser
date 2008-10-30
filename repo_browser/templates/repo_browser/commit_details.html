@@ -1,0 +1,21 @@
+{% extends "repo_browser/base.html" %}
+
+{% block content %}
+<h2>{{ repository.name }}</h2>
+
+<dl>
+  <dt>Commit</dt>
+  <dd><a href="{{ commit.urls.view }}">{{ commit.identifier }}</a></dd>
+  <dt>Author</dt>
+  <dd>{{ commit.author }}</dd>
+  <dt>Date</dt>
+  <dd>{{ commit.timestamp }}</dd>
+</dl>
+<div class="commit-message">{{ commit.message }}</div>
+
+{% for diff in commit.diffs %}
+<div class="diff">{{ diff }}</div>
+{% endfor %}
+
+
+{% endblock %}
