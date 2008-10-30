@@ -1,0 +1,31 @@
+{% extends "repo_browser/base.html" %}
+
+{% block content %}
+<h2>{{ repository.name }}</h2>
+<div class="description">{{ repository.description }}</div>
+
+<table class="last-commits">
+  <caption>Recent Commits</caption>
+  <thead>
+    <tr>
+      <th>Author</th>
+      <th>Commit</th>
+      <th>Date</th>
+      <th>{# links #}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for commit in repository.commits.all|slice:":10" %}
+    <tr>
+      <td>{{ commit.author }}</td>
+      <td>{{ commit.identifier }}</td>
+      <td>{{ commit.timestamp }}</td>
+      <td><a href="{{ commit.urls.diff }}">diff</a> | 
+        <a href="{{ commit.urls.diff }}">manifest</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+
+{% endblock %}
