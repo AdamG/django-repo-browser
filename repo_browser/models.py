@@ -82,15 +82,19 @@ class Repository(models.Model):
         """
         pending_commits = [self.backend.root()]
         for commit_id in pending_commits:
-            pending_commits.extend(self.backend.children_for(commit_id))
+            for child in self.backend.children_for(commit_id):
+                if child not in pending_commits:
+                    pending_commits.append(child)
             try:
                 commit = self.commits.get(identifier=commit_id)
             except Commit.DoesNotExist:
                 commit = Commit(repository=self, identifier=commit_id)
 
-            commit.timestamp = self.backend.datetime_for(commit_id)
+            commit.timestamp = self.backend.timestamp_for(commit_id)
             commit.author = self.backend.author_for(commit_id)
             commit.message = self.backend.commit_message_for(commit_id)
+            commit.save()
+
 
 
 class Commit(models.Model):
