@@ -1,28 +1,32 @@
-from django.views.generic.simple import direct_to_template
 from django.shortcuts import get_object_or_404
 import django.core.paginator
 
 import repo_browser.models
+from repo_browser.decorators import template
 
 
+@template("repo_browser/list_repositories.html")
 def list_repositories(request):
     "List the available repositories"
 
     repositories = repo_browser.models.Repository.objects.filter(
         show_on_index=True)
-    return direct_to_template(request, "repo_browser/list_repositories.html",
-                              {"repositories": repositories})
+
+    return {"repositories": repositories}
 
 
+@template("repo_browser/repository_details.html")
 def repository_details(request, repository_slug):
     "Summary detail page for a repository"
+
     repository = get_object_or_404(
         repo_browser.models.Repository,
         slug=str(repository_slug))
-    return direct_to_template(request, "repo_browser/repository_details.html",
-                              {"repository": repository})
+
+    return {"repository": repository}
 
 
+@template("repo_browser/commit_list.html")
 def commitlist(request, repository_slug):
     "View a set of commits in a repo"
 
@@ -34,11 +38,11 @@ def commitlist(request, repository_slug):
         int(request.GET.get("per_page", 50)))
     commits = commit_paginator.page(int(request.GET.get("page", 1)))
 
-    return direct_to_template(request, "repo_browser/commit_list.html",
-                              {"repository": repository,
-                               "commits": commits})
+    return {"repository": repository,
+            "commits": commits}
 
 
+@template("repo_browser/commit_details.html")
 def view_commit(request, repository_slug, commit_identifier):
     "View a single commit"
 
@@ -49,8 +53,7 @@ def view_commit(request, repository_slug, commit_identifier):
         repository.commits.all(),
         identifier=str(commit_identifier))
 
-    return direct_to_template(request, "repo_browser/commit_details.html",
-                              {"repository": repository,
-                               "commit": commit})
+    return {"repository": repository,
+            "commit": commit}
 
 
