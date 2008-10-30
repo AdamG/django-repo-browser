@@ -77,7 +77,7 @@ class MercurialBackend(BaseBackend):
         return self.repository.changectx(identifier).files()
 
     def diffs_for(self, identifier):
-        from mercurial import mdiff, ui, hg, util, patch
+        from mercurial import mdiff, util, patch
 
         ctx = self.repository.changectx(identifier)
         # TODO: Check the hgweb implementation on this
@@ -102,6 +102,7 @@ class MercurialBackend(BaseBackend):
                                 this_data,this_date,
                                 modified_file, modified_file,
                                 opts=diffopts)
+        # TODO: diffs for added, removed files.
 
     def tip(self):
         return self.hexify(self.repository.changectx("tip")._node)
