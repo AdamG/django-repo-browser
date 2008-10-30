@@ -58,7 +58,11 @@ class MercurialBackend(BaseBackend):
             self.repository.changectx(identifier).children()]
 
     def timestamp_for(self, identifier):
-        return self.repository.changectx(identifier).date()
+        import datetime, time
+        # TODO: Should this be time.gmtime or time.localtime?
+        return datetime.datetime(
+            *time.gmtime(
+                self.repository.changectx(identifier).date()[0])[:6])
 
     def author_for(self, identifier):
         return self.repository.changectx(identifier).user()
