@@ -102,7 +102,21 @@ class MercurialBackend(BaseBackend):
                                 this_data,this_date,
                                 modified_file, modified_file,
                                 opts=diffopts)
-        # TODO: diffs for added, removed files.
+
+        for added_file in added:
+            filectx = ctx.filectx(added_file)
+            this_data = filectx.data()
+            yield mdiff.unidiff(
+                None, parent_date, this_data, this_date,
+                added_file, added_file, opts=diffopts)
+
+        for removed_file in removed:
+            parent_filectx = parent.filectx(removed_file)
+            parent_data = parent_filectx.data()
+            yield mdiff.unidiff(
+                parent_data, parent_date, None, ctx.date(),
+                removed_file, removed_file, opts=diffopts)
+        # TODO: diffs for removed files.
 
     def tip(self):
         return self.hexify(self.repository.changectx("tip")._node)
