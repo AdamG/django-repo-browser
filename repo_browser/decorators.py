@@ -46,3 +46,18 @@ def cached_getter(func):
 
     return _closure
 
+
+def attrproperty(method):
+    "A method decorator that turns __getitem__ and __getattr__ into __call__"
+
+    class _Object(object):
+        def __init__(self, obj):
+            # Object is created when the property is accessed
+            self.obj = obj
+
+        def __getitem__(self, arg):
+            return method(self.obj, arg)
+        def __getattr__(self, arg):
+            return method(self.obj, arg)
+
+    return property(_Object)
