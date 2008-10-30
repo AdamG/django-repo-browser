@@ -3,3 +3,13 @@ div.diff
     white-space: pre;
     font-family: monospace;
 }
+tr.commit-message
+{
+    background-color: #eee;
+    color: #333;
+    padding-left: 10px;
+}
+tr.commit-message td
+{
+    padding-left: 10px;
+}
