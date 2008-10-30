@@ -18,10 +18,10 @@
     {% for commit in repository.commits.all|slice:":10" %}
     <tr>
       <td>{{ commit.author }}</td>
-      <td>{{ commit.identifier }}</td>
+      <td><a href="{{ commit.urls.view }}">{{ commit.identifier }}</a></td>
       <td>{{ commit.timestamp }}</td>
       <td><a href="{{ commit.urls.diff }}">diff</a> | 
-        <a href="{{ commit.urls.diff }}">manifest</a></td>
+        <a href="{{ commit.urls.manifest }}">manifest</a></td>
     </tr>
     {% endfor %}
   </tbody>

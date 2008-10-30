@@ -11,7 +11,7 @@
   <tbody>
     {% for repository in repositories %}
     <tr>
-      <td>{{ repository.name }}</td>
+      <td><a href="{{ repository.urls.view }}">{{ repository.name }}</a></td>
     </tr>
     {% endfor %}
   </tbody>
