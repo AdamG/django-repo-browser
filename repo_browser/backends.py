@@ -24,6 +24,9 @@ class BaseBackend(object):
     def files_for(self, identifier):
         raise NotImplementedError()
 
+    def diffs_for(self, identifier):
+        raise NotImplementedError()
+
     def root(self):
         "The first, parentless commit"
         raise NotImplementedError()
@@ -72,6 +75,33 @@ class MercurialBackend(BaseBackend):
 
     def files_for(self, identifier):
         return self.repository.changectx(identifier).files()
+
+    def diffs_for(self, identifier):
+        from mercurial import mdiff, ui, hg, util, patch
+
+        ctx = self.repository.changectx(identifier)
+        # TODO: Check the hgweb implementation on this
+        parent = ctx.parents()[0]
+        parent_date = util.datestr(parent.date())
+        this_date = util.datestr(ctx.date())
+        diffopts = patch.diffopts(self.repository.ui, untrusted=True)
+
+        # Returns a tuple of modified, added, removed, deleted, unknown
+        # TODO: look up in the api what FIXME* are
+        modified, added, removed, deleted, unknown, FIXME, FIXME2 = \
+            self.repository.status(
+            parent.node(),
+            ctx.node(),)
+
+        for modified_file in modified:
+            filectx = ctx.filectx(modified_file)
+            parent_filectx = parent.filectx(modified_file)
+            this_data = filectx.data()
+            parent_data = parent_filectx.data()
+            yield mdiff.unidiff(parent_data, parent_date,
+                                this_data,this_date,
+                                modified_file, modified_file,
+                                opts=diffopts)
 
     def tip(self):
         return self.hexify(self.repository.changectx("tip")._node)
