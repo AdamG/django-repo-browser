@@ -120,10 +120,21 @@ class Commit(models.Model):
 
     class Meta:
         unique_together = (
-            ("identifier", "id"))
+            ("identifier", "repository"))
         ordering = ("-timestamp",)
         db_table = "repobrowser_commit"
 
+    @attrproperty
+    def urls(self, name):
+        from django.core.urlresolvers import reverse
+
+        if name == "view":
+            return reverse("repo-browser-view-commit",
+                           args=[self.repository.slug, self.identifier])
+
+    @property
+    def diffs(self):
+        return self.repository.backend.diffs_for(self.identifier)
 
 class CommitRelation(models.Model):
     "A relation between a parent and child commit"
