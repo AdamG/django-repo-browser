@@ -1,5 +1,7 @@
 from django.db import models
 
+from repo_browser.decorators import attrproperty
+
 
 class Repository(models.Model):
     "A repository"
@@ -15,7 +17,7 @@ class Repository(models.Model):
         help_text="For Mercurial, Git, and Bazaar, the full filesystem path "
         "to the repository.")
     slug = models.SlugField(
-        max_length=255, primary_key=True,
+        max_length=255, db_index=True,
         help_text="An identifier to use in the URL for this repository")
     show_on_index = models.BooleanField(
         default=True,
@@ -48,6 +50,9 @@ class Repository(models.Model):
     def __repr__(self):
         return "<%s>" % unicode(self)
 
+    def get_absolute_url(self):
+        return self.urls.view
+
     def get_backend(self):
         import repo_browser.backends
         BackendClass = getattr(repo_browser.backends,
@@ -60,6 +65,15 @@ class Repository(models.Model):
             self._backend = self.get_backend()
         return self._backend
 
+    @attrproperty
+    def urls(self, name):
+        from django.core.urlresolvers import reverse
+
+        if name == "view":
+            return reverse("repo-browser-repository-details", args=[self.slug])
+        if name == "commitlist":
+            return reverse("repo-browser-commit-list", args=[self.slug])
+
     def full_sync(self):
         """Starting with root and traversing, completely sync the repository
 
@@ -67,9 +81,16 @@ class Repository(models.Model):
 
         """
         pending_commits = [self.backend.root()]
-        for commit in pending_commits:
-            pending_commits.extend(self.backend.children_for(commit))
-            self.commits.get_or_create(identifier=commit)
+        for commit_id in pending_commits:
+            pending_commits.extend(self.backend.children_for(commit_id))
+            try:
+                commit = self.commits.get(identifier=commit_id)
+            except Commit.DoesNotExist:
+                commit = Commit(repository=self, identifier=commit_id)
+
+            commit.timestamp = self.backend.datetime_for(commit_id)
+            commit.author = self.backend.author_for(commit_id)
+            commit.message = self.backend.commit_message_for(commit_id)
 
 
 class Commit(models.Model):
@@ -79,15 +100,24 @@ class Commit(models.Model):
     from the on-disk repository and is needed for any type of
     searching or reporting.
 
+    Everything that should be queryable should be denormalized 'onto'
+    instances of Commit. Timestamps, authors, commit messages; maybe
+    even diffs (although probably not - dealing with large diffs could
+    get hairy)
+
     """
 
     repository = models.ForeignKey(Repository, related_name="commits")
     # Hash for DVCS, rev number for svn/cvs
     identifier = models.CharField(max_length=255, db_index=True)
+    timestamp = models.DateTimeField()
+    message = models.TextField()
+    author = models.CharField(max_length=255)
 
     class Meta:
         unique_together = (
             ("identifier", "id"))
+        ordering = ("-timestamp",)
         db_table = "repobrowser_commit"
 
 
