@@ -1,0 +1,20 @@
+{% extends "repo_browser/base.html" %}
+
+{% block content %}
+<table>
+  <caption>Repositories</caption>
+  <thead>
+    <tr>
+      <th>Name</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for repository in repositories %}
+    <tr>
+      <td>{{ repository.name }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
