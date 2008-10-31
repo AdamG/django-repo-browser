@@ -18,7 +18,7 @@ Installation
    block, a ``scripts`` block, and a ``content`` block.
 
 #. Symlink ``media/repo_browser.css`` and ``media/repo_browser.js`` to
-   your `MEDIA_ROOT`
+   your ``MEDIA_ROOT``
 
 #. Add ``url(r'^repos/', include('repo_browser.urls')),`` to your
    ``urls.py``
