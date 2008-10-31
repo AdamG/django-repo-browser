@@ -37,7 +37,7 @@ def cached_getter(func):
     def _closure(*args,**kwargs):
         cache_key = "%s.%s(%s)" % (
             func.__module__, func.__name__,
-            sha1(repr(args)+repr(kwargs)).hexdigest)
+            sha1(repr(args)+repr(kwargs)).hexdigest())
         val = cache.get(cache_key)
         if val is None:
             val = func(*args, **kwargs)

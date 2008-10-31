@@ -96,7 +96,6 @@ class Repository(models.Model):
             commit.save()
 
 
-
 class Commit(models.Model):
     """A single commit in a repository
 
