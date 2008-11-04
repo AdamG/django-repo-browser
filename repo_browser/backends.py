@@ -35,6 +35,10 @@ class BaseBackend(object):
         "The tip commit - childless, but not necessarily the only one"
         raise NotImplementedError()
 
+    def heads(self):
+        "Commits that have no children"
+        raise NotImplementedError()
+
 
 class MercurialBackend(BaseBackend):
     def __init__(self, *args, **kwargs):
@@ -122,3 +126,7 @@ class MercurialBackend(BaseBackend):
 
     def root(self):
         return self.hexify(self.repository.changectx("0")._node)
+
+    def heads(self):
+        return [self.hexify(node) for node in self.repository.heads()]
+

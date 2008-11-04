@@ -74,13 +74,9 @@ class Repository(models.Model):
         if name == "commitlist":
             return reverse("repo-browser-commit-list", args=[self.slug])
 
-    def full_sync(self):
-        """Starting with root and traversing, completely sync the repository
-
-        Should be safe to run multiple times
-
-        """
-        pending_commits = [self.backend.root()]
+    def sync_from(self, revisions):
+        "A starting from ``revisions``, traverse and sync the repository."
+        pending_commits = list(revisions)
         for commit_id in pending_commits:
             for child in self.backend.children_for(commit_id):
                 if child not in pending_commits:
@@ -94,6 +90,15 @@ class Repository(models.Model):
             commit.author = self.backend.author_for(commit_id)
             commit.message = self.backend.commit_message_for(commit_id)
             commit.save()
+
+
+    def full_sync(self):
+        "Starting with the initial revision, completely sync the repository"
+        self.sync_from([self.backend.root()])
+
+    def incremental_sync(self):
+        "Starting with all known heads, sync the repository"
+        self.sync_from(self.backend.heads())
 
 
 class Commit(models.Model):
