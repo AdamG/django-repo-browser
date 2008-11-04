@@ -44,11 +44,11 @@ class Repository(models.Model):
         verbose_name_plural = "repositories"
 
     def __unicode__(self):
-        return "%s(%r)" % (self.get_vcs_backend_display(),
-                           self.connection_string)
+        return self.name
 
     def __repr__(self):
-        return "<%s>" % unicode(self)
+        return "<%s(%s)>" % (self.get_vcs_backend_display(),
+                           self.connection_string)
 
     def get_absolute_url(self):
         return self.urls.view
