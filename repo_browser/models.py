@@ -55,8 +55,7 @@ class Repository(models.Model):
 
     def get_backend(self):
         import repo_browser.backends
-        BackendClass = getattr(repo_browser.backends,
-                                "%sBackend" % self.vcs_backend.capitalize())
+        BackendClass = repo_browser.backends.BACKENDS[self.vcs_backend]
         return BackendClass(self.connection_string)
 
     @property
@@ -90,7 +89,6 @@ class Repository(models.Model):
             commit.author = self.backend.author_for(commit_id)
             commit.message = self.backend.commit_message_for(commit_id)
             commit.save()
-
 
     def full_sync(self):
         "Starting with the initial revision, completely sync the repository"
@@ -146,6 +144,7 @@ class Commit(models.Model):
 
 class CommitRelation(models.Model):
     "A relation between a parent and child commit"
+
     # Because of graph-based DVCSs, I can't simply use a .parent FK.
     parent = models.ForeignKey(Commit, related_name="child_relations")
     child = models.ForeignKey(Commit, related_name="parent_relations")

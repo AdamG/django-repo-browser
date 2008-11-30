@@ -130,3 +130,7 @@ class MercurialBackend(BaseBackend):
     def heads(self):
         return [self.hexify(node) for node in self.repository.heads()]
 
+
+BACKENDS = {
+    "mercurial": MercurialBackend,
+}
