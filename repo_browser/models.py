@@ -113,6 +113,9 @@ class Commit(models.Model):
     even diffs (although probably not - dealing with large diffs could
     get hairy)
 
+    Having commits as models also allows for things like
+    django-threadedcomments on specific commits.
+
     """
 
     repository = models.ForeignKey(Repository, related_name="commits")
@@ -139,6 +142,7 @@ class Commit(models.Model):
     @property
     def diffs(self):
         return self.repository.backend.diffs_for(self.identifier)
+
 
 class CommitRelation(models.Model):
     "A relation between a parent and child commit"
