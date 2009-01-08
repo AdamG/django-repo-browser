@@ -146,6 +146,9 @@ class Commit(models.Model):
             return "%s?format=diff" % reverse(
                 "repo-browser-view-commit",
                 args=[self.repository.slug, self.identifier])
+        if name == "manifest":
+            return reverse("repo-browser-manifest",
+                           args=[self.repository.slug, self.identifier])
 
     @property
     def diffs(self):
@@ -154,6 +157,14 @@ class Commit(models.Model):
     @property
     def diff(self):
         return "\n".join(self.diffs)
+
+    @property
+    def files(self):
+        return self.repository.backend.files_for(self.identifier)
+
+    @property
+    def manifest(self):
+        return sorted(self.repository.backend.manifest_for(self.identifier).keys())
 
 
 class CommitRelation(models.Model):

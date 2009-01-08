@@ -1,5 +1,5 @@
 from django.core.paginator import Paginator
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 
 import repo_browser.models
@@ -68,4 +68,20 @@ def view_commit(request, repository_slug, commit_identifier):
 
     return {"repository": repository,
             "commit": commit}
+
+
+@template("repo_browser/manifest.html")
+def manifest(request, repository_slug, commit_identifier, directory=None):
+    "View a single commit"
+    # TODO: Handle directory to only show particular sub-directories
+
+    repository = get_object_or_404(
+        repo_browser.models.Repository,
+        slug=str(repository_slug))
+    commit = get_object_or_404(
+        repository.commits.all(),
+        identifier=str(commit_identifier))
+
+    return {"repository": repository,
+            "commit": commit, }
 
