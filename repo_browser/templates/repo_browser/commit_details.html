@@ -1,7 +1,7 @@
 {% extends "repo_browser/base.html" %}
 
 {% block content %}
-<h2>{{ repository.name }}</h2>
+<h2><a href="{{ repository.urls.view }}">{{ repository.name }}</a></h2>
 
 <dl>
   <dt>Commit</dt>

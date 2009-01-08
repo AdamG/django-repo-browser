@@ -51,6 +51,7 @@ class Repository(models.Model):
 
     def get_absolute_url(self):
         return self.urls.view
+    absolute_url = property(get_absolute_url)
 
     def get_backend(self):
         import repo_browser.backends
