@@ -54,37 +54,43 @@ class MercurialBackend(BaseBackend):
             mercurial.ui.ui(report_untrusted=False, interactive=False),
             self.connection_string)
 
+    def ctx_for(self, identifier):
+        return self.repository.changectx(identifier)
+
     def parents_for(self, identifier):
         return [
             self.hexify(c._node) for c in
-            self.repository.changectx(identifier).parents()]
+            self.ctx_for(identifier).parents()]
 
     def children_for(self, identifier):
         return [
             self.hexify(c._node) for c in
-            self.repository.changectx(identifier).children()]
+            self.ctx_for(identifier).children()]
 
     def timestamp_for(self, identifier):
         import datetime, time
         # TODO: Should this be time.gmtime or time.localtime?
         return datetime.datetime(
             *time.gmtime(
-                self.repository.changectx(identifier).date()[0])[:6])
+                self.ctx_for(identifier).date()[0])[:6])
 
     def author_for(self, identifier):
-        return self.repository.changectx(identifier).user()
+        return self.ctx_for(identifier).user()
 
     def commit_message_for(self, identifier):
-        return self.repository.changectx(identifier).description()
+        return self.ctx_for(identifier).description()
 
     def files_for(self, identifier):
-        return self.repository.changectx(identifier).files()
+        return self.ctx_for(identifier).files()
+
+    def manifest_for(self, identifier):
+        return self.ctx_for(identifier).manifest()
 
     def diffs_for(self, identifier):
         from mercurial import mdiff, util, patch
         from repo_browser.integration import Diff
 
-        ctx = self.repository.changectx(identifier)
+        ctx = self.ctx_for(identifier)
         # TODO: Check the hgweb implementation on this
         parent = ctx.parents()[0]
         parent_date = util.datestr(parent.date())
@@ -123,10 +129,10 @@ class MercurialBackend(BaseBackend):
                 removed_file, removed_file, opts=diffopts))
 
     def tip(self):
-        return self.hexify(self.repository.changectx("tip")._node)
+        return self.hexify(self.ctx_for("tip")._node)
 
     def root(self):
-        return self.hexify(self.repository.changectx("0")._node)
+        return self.hexify(self.ctx_for("0")._node)
 
     def heads(self):
         return [self.hexify(node) for node in self.repository.heads()]
