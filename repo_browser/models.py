@@ -141,10 +141,18 @@ class Commit(models.Model):
         if name == "view":
             return reverse("repo-browser-view-commit",
                            args=[self.repository.slug, self.identifier])
+        elif name == "diff":
+            return "%s?format=diff" % reverse(
+                "repo-browser-view-commit",
+                args=[self.repository.slug, self.identifier])
 
     @property
     def diffs(self):
         return self.repository.backend.diffs_for(self.identifier)
+
+    @property
+    def diff(self):
+        return "\n".join(self.diffs)
 
 
 class CommitRelation(models.Model):

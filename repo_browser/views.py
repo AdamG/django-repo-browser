@@ -1,5 +1,6 @@
+from django.core.paginator import Paginator
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-import django.core.paginator
 
 import repo_browser.models
 from repo_browser.decorators import template
@@ -16,12 +17,19 @@ def list_repositories(request):
 
 
 @template("repo_browser/repository_details.html")
-def repository_details(request, repository_slug):
+def repository_details(request, repository_slug, allow_sync=True):
     "Summary detail page for a repository"
 
     repository = get_object_or_404(
         repo_browser.models.Repository,
         slug=str(repository_slug))
+
+    if request.method == "POST":
+        # Allow a button to force re-sync from the on-disk repository
+        if 'force_sync' in request.POST and allow_sync:
+            repository.incremental_sync()
+            # Avoid POST-on-refresh
+            return HttpResponseRedirect("")
 
     return {"repository": repository}
 
@@ -33,7 +41,7 @@ def commitlist(request, repository_slug):
     repository = get_object_or_404(
         repo_browser.models.Repository,
         slug=str(repository_slug))
-    commit_paginator = django.core.paginator.Paginator(
+    commit_paginator = Paginator(
         repository.commits.all(),
         int(request.GET.get("per_page", 50)))
     commits = commit_paginator.page(int(request.GET.get("page", 1)))
@@ -53,7 +61,11 @@ def view_commit(request, repository_slug, commit_identifier):
         repository.commits.all(),
         identifier=str(commit_identifier))
 
+    if request.GET.get("format") == "diff":
+        res = HttpResponse(commit.diff, content_type="text/x-diff")
+        res["Content-Disposition"] = 'attachment; filename="%s.diff"' % commit.identifier
+        return res
+
     return {"repository": repository,
             "commit": commit}
-
 
