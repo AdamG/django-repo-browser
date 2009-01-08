@@ -6,28 +6,17 @@
 
 <form action="" method="post"><input type="submit" name="force_sync" value="Sync Repository" /></form>
 
-<table class="last-commits">
-  <caption>Recent Commits</caption>
-  <thead>
-    <tr>
-      <th>Author</th>
-      <th>Commit</th>
-      <th>Date</th>
-      <th>{# links #}</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for commit in repository.commits.all|slice:":10" %}
-    <tr>
-      <td>{{ commit.author }}</td>
-      <td><a href="{{ commit.urls.view }}">{{ commit.identifier }}</a></td>
-      <td>{{ commit.timestamp }}</td>
-      <td><a href="{{ commit.urls.diff }}">diff</a> | 
-        <a href="{{ commit.urls.manifest }}">manifest</a></td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
+<div class="last-commits">
+  {% for commit in repository.commits.all|slice:":10" %}
+  <div class="commit">
+    <div class="commit-message">{{ commit.message }}</div>
+    <div class="commit-author">{{ commit.author }}</div>
+    <ul class="commit-links">
+      <li><a href="{{ commit.urls.view }}">{{ commit.identifier }}</a></li>
+      <li><a href="{{ commit.urls.manifest }}">Manifest</a></li>
+    </ul>
+  </div>
+  {% endfor %}
+</div>
 
 {% endblock %}

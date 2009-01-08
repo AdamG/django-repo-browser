@@ -3,16 +3,7 @@ div.diff
     white-space: pre;
     font-family: monospace;
 }
-tr.commit-message
-{
-    background-color: #eee;
-    color: #333;
-    padding-left: 10px;
-}
-tr.commit-message td
-{
-    padding-left: 10px;
-}
+
 
 td.linenos { background-color: #f0f0f0; padding-right: 10px; }
 span.lineno { background-color: #f0f0f0; padding: 0 5px 0 5px; }
