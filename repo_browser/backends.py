@@ -82,6 +82,7 @@ class MercurialBackend(BaseBackend):
 
     def diffs_for(self, identifier):
         from mercurial import mdiff, util, patch
+        from repo_browser.integration import Diff
 
         ctx = self.repository.changectx(identifier)
         # TODO: Check the hgweb implementation on this
@@ -102,24 +103,24 @@ class MercurialBackend(BaseBackend):
             parent_filectx = parent.filectx(modified_file)
             this_data = filectx.data()
             parent_data = parent_filectx.data()
-            yield mdiff.unidiff(parent_data, parent_date,
+            yield Diff(mdiff.unidiff(parent_data, parent_date,
                                 this_data,this_date,
                                 modified_file, modified_file,
-                                opts=diffopts)
+                                opts=diffopts))
 
         for added_file in added:
             filectx = ctx.filectx(added_file)
             this_data = filectx.data()
-            yield mdiff.unidiff(
+            yield Diff(mdiff.unidiff(
                 None, parent_date, this_data, this_date,
-                added_file, added_file, opts=diffopts)
+                added_file, added_file, opts=diffopts))
 
         for removed_file in removed:
             parent_filectx = parent.filectx(removed_file)
             parent_data = parent_filectx.data()
-            yield mdiff.unidiff(
+            yield Diff(mdiff.unidiff(
                 parent_data, parent_date, None, ctx.date(),
-                removed_file, removed_file, opts=diffopts)
+                removed_file, removed_file, opts=diffopts))
 
     def tip(self):
         return self.hexify(self.repository.changectx("tip")._node)
