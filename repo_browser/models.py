@@ -47,8 +47,7 @@ class Repository(models.Model):
         return self.name
 
     def __repr__(self):
-        return "<%s(%s)>" % (self.get_vcs_backend_display(),
-                           self.connection_string)
+        return "<repo_browser.Repository %s>" % unicode(self)
 
     def get_absolute_url(self):
         return self.urls.view
@@ -129,6 +128,12 @@ class Commit(models.Model):
         ordering = ("-timestamp",)
         db_table = "repobrowser_commit"
 
+    def __unicode__(self):
+        return self.identifier
+
+    def __repr__(self):
+        return "<repo_browser.Commit %s>" % unicode(self)
+
     @attrproperty
     def urls(self, name):
         from django.core.urlresolvers import reverse
@@ -156,3 +161,6 @@ class CommitRelation(models.Model):
 
     def __unicode__(self):
         return "%s -> %s" % (self.parent.identifier, self.child.identifier)
+
+    def __repr__(self):
+        return "<repo_browser.CommitRelation %s>" % unicode(self)
