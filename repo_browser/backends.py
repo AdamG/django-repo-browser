@@ -57,7 +57,7 @@ class MercurialBackend(BaseBackend):
 
 
 class GitBackend(BaseBackend):
-    "An agnostic VCS backend class. "
+    "A Git backend"
 
     CommitClass = commit.GitCommit
 
