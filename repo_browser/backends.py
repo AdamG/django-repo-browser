@@ -1,31 +1,17 @@
 
+from repo_browser import commit
+
+
 class BaseBackend(object):
     "An agnostic VCS backend class. "
-    name = "base"
+
+    CommitClass = commit.Commit
 
     def __init__(self, connection_string):
         self.connection_string = connection_string
 
-    def parents_for(self, identifier):
-        raise NotImplementedError()
-
-    def children_for(self, identifer):
-        raise NotImplementedError()
-
-    def timestamp_for(self, identifier):
-        raise NotImplementedError()
-
-    def author_for(self, identifier):
-        raise NotImplementedError()
-
-    def commit_message_for(self, identifier):
-        raise NotImplementedError()
-
-    def files_for(self, identifier):
-        raise NotImplementedError()
-
-    def diffs_for(self, identifier):
-        raise NotImplementedError()
+    def get_commit(self, identifier):
+        return self.CommitClass(identifier, self)
 
     def root(self):
         "The first, parentless commit"
@@ -41,6 +27,9 @@ class BaseBackend(object):
 
 
 class MercurialBackend(BaseBackend):
+
+    CommitClass = commit.MercurialCommit
+
     def __init__(self, *args, **kwargs):
         "Create a Mercurial repo object and keep it around locally"
         import mercurial
@@ -50,94 +39,47 @@ class MercurialBackend(BaseBackend):
         self.hexify = mercurial.node.hex
 
         super(MercurialBackend, self).__init__(*args, **kwargs)
-        self.repository = mercurial.hg.repository(
+        self.repo = mercurial.hg.repository(
             mercurial.ui.ui(report_untrusted=False, interactive=False),
             self.connection_string)
 
     def ctx_for(self, identifier):
-        return self.repository.changectx(identifier)
-
-    def parents_for(self, identifier):
-        return [
-            self.hexify(c._node) for c in
-            self.ctx_for(identifier).parents()]
-
-    def children_for(self, identifier):
-        return [
-            self.hexify(c._node) for c in
-            self.ctx_for(identifier).children()]
-
-    def timestamp_for(self, identifier):
-        import datetime, time
-        # TODO: Should this be time.gmtime or time.localtime?
-        return datetime.datetime(
-            *time.gmtime(
-                self.ctx_for(identifier).date()[0])[:6])
-
-    def author_for(self, identifier):
-        return self.ctx_for(identifier).user()
-
-    def commit_message_for(self, identifier):
-        return self.ctx_for(identifier).description()
-
-    def files_for(self, identifier):
-        return self.ctx_for(identifier).files()
-
-    def manifest_for(self, identifier):
-        return self.ctx_for(identifier).manifest()
-
-    def diffs_for(self, identifier):
-        from mercurial import mdiff, util, patch
-        from repo_browser.integration import Diff
-
-        ctx = self.ctx_for(identifier)
-        # TODO: Check the hgweb implementation on this
-        parent = ctx.parents()[0]
-        parent_date = util.datestr(parent.date())
-        this_date = util.datestr(ctx.date())
-        diffopts = patch.diffopts(self.repository.ui, untrusted=True)
-
-        # Returns a tuple of modified, added, removed, deleted, unknown
-        # TODO: look up in the api what FIXME* are
-        modified, added, removed, deleted, unknown, FIXME, FIXME2 = \
-            self.repository.status(
-            parent.node(),
-            ctx.node(),)
-
-        for modified_file in modified:
-            filectx = ctx.filectx(modified_file)
-            parent_filectx = parent.filectx(modified_file)
-            this_data = filectx.data()
-            parent_data = parent_filectx.data()
-            yield Diff(mdiff.unidiff(parent_data, parent_date,
-                                this_data,this_date,
-                                modified_file, modified_file,
-                                opts=diffopts))
-
-        for added_file in added:
-            filectx = ctx.filectx(added_file)
-            this_data = filectx.data()
-            yield Diff(mdiff.unidiff(
-                None, parent_date, this_data, this_date,
-                added_file, added_file, opts=diffopts))
-
-        for removed_file in removed:
-            parent_filectx = parent.filectx(removed_file)
-            parent_data = parent_filectx.data()
-            yield Diff(mdiff.unidiff(
-                parent_data, parent_date, None, ctx.date(),
-                removed_file, removed_file, opts=diffopts))
+        return self.repo.changectx(identifier)
 
     def tip(self):
-        return self.hexify(self.ctx_for("tip")._node)
+        return self.CommitClass(self.hexify(self.ctx_for("tip")._node), self)
 
     def root(self):
-        return self.hexify(self.ctx_for("0")._node)
+        return self.CommitClass(self.hexify(self.ctx_for("0")._node), self)
 
     def heads(self):
-        return [self.hexify(node) for node in self.repository.heads()]
+        return [self.CommitClass(self.hexify(node), self) for node in self.repo.heads()]
+
+
+class GitBackend(BaseBackend):
+    "An agnostic VCS backend class. "
+
+    CommitClass = commit.GitCommit
+
+    def __init__(self, connection_string):
+        from git import Repo
+        self.repo = Repo(connection_string)
+
+    def root(self):
+        "The first, parentless commit"
+
+        return self.CommitClass(self.repo.log(n=1)[0].id, self)
+
+    def tip(self):
+        "The HEAD commit"
+        return self.CommitClass(self.repo.commit("HEAD"), self)
+
+    def heads(self):
+        "Commits that have no children"
+        return [self.CommitClass(head.commit, self) for head in self.repo.heads]
 
 
 BACKENDS = {
     "mercurial": MercurialBackend,
+    "git": GitBackend,
 }

@@ -75,19 +75,21 @@ class Repository(models.Model):
 
     def sync_from(self, revisions):
         "A starting from ``revisions``, traverse and sync the repository."
-        pending_commits = list(revisions)
-        for commit_id in pending_commits:
-            for child in self.backend.children_for(commit_id):
-                if child not in pending_commits:
-                    pending_commits.append(child)
-            try:
-                commit = self.commits.get(identifier=commit_id)
-            except Commit.DoesNotExist:
-                commit = Commit(repository=self, identifier=commit_id)
+        pending_commits = [rev.id for rev in revisions]
+        for _node in pending_commits:
+            _commit = self.backend.get_commit(_node)
 
-            commit.timestamp = self.backend.timestamp_for(commit_id)
-            commit.author = self.backend.author_for(commit_id)
-            commit.message = self.backend.commit_message_for(commit_id)
+            for child in _commit.children:
+                if child.id not in pending_commits:
+                    pending_commits.append(child.id)
+            try:
+                commit = self.commits.get(identifier=_commit.id)
+            except Commit.DoesNotExist:
+                commit = Commit(repository=self, identifier=_commit.id)
+
+            commit.timestamp = _commit.timestamp
+            commit.author = _commit.author
+            commit.message = _commit.commit_message
             commit.save()
 
     def full_sync(self):
@@ -149,10 +151,13 @@ class Commit(models.Model):
         if name == "manifest":
             return reverse("repo-browser-manifest",
                            args=[self.repository.slug, self.identifier])
+    @property
+    def _commit(self):
+        return self.repository.backend.get_commit(self.identifier)
 
     @property
     def diffs(self):
-        return self.repository.backend.diffs_for(self.identifier)
+        return self._commit.diffs
 
     @property
     def diff(self):
@@ -160,11 +165,11 @@ class Commit(models.Model):
 
     @property
     def files(self):
-        return self.repository.backend.files_for(self.identifier)
+        return self._commit.files
 
     @property
     def manifest(self):
-        return sorted(self.repository.backend.manifest_for(self.identifier).keys())
+        return self._commit.manifest
 
 
 class CommitRelation(models.Model):
